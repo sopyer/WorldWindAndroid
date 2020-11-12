@@ -175,7 +175,7 @@ public class WorldWindow extends GLSurfaceView implements Choreographer.FrameCal
 
         // Initialize the WorldWindow's render resource cache.
         int cacheCapacity = RenderResourceCache.recommendedCapacity();
-        this.renderResourceCache = new RenderResourceCache(cacheCapacity);
+        this.renderResourceCache = new RenderResourceCache(cacheCapacity, this.getContext());
 
         // Set up to render on demand to an OpenGL ES 2.x context
         // TODO Investigate and use the EGL chooser submitted by jgiovino
@@ -900,7 +900,6 @@ public class WorldWindow extends GLSurfaceView implements Choreographer.FrameCal
         this.rc.camera = this.camera;
         this.rc.cameraPoint = this.globe.geographicToCartesian(this.rc.camera.position.latitude, this.rc.camera.position.longitude, this.rc.camera.position.altitude, this.rc.cameraPoint);
         this.rc.renderResourceCache = this.renderResourceCache;
-        this.rc.renderResourceCache.setResources(this.getContext().getResources());
         this.rc.resources = this.getContext().getResources();
 
         // Configure the frame's Cartesian modelview matrix and eye coordinate projection matrix.

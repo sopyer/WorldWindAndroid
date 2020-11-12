@@ -5,7 +5,7 @@
 
 package gov.nasa.worldwind.render;
 
-import android.content.res.Resources;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.os.Handler;
@@ -26,15 +26,13 @@ import gov.nasa.worldwind.util.SynchronizedMemoryCache;
 public class RenderResourceCache extends LruMemoryCache<Object, RenderResource>
     implements Retriever.Callback<ImageSource, ImageOptions, Bitmap>, Handler.Callback {
 
-    protected Resources resources;
-
     protected Handler handler;
 
     protected Queue<RenderResource> evictionQueue;
 
-    protected Retriever<ImageSource, ImageOptions, Bitmap> imageRetriever;
+    protected ImageRetriever imageRetriever;
 
-    protected Retriever<ImageSource, ImageOptions, Bitmap> urlImageRetriever;
+    protected ImageRetriever urlImageRetriever;
 
     protected LruMemoryCache<ImageSource, Bitmap> imageRetrieverCache;
 
@@ -44,21 +42,21 @@ public class RenderResourceCache extends LruMemoryCache<Object, RenderResource>
 
     protected static final int TRIM_STALE_RETRIEVALS_DELAY = 6000;
 
-    public RenderResourceCache(int capacity) {
+    public RenderResourceCache(int capacity, Context context) {
         super(capacity);
-        this.init();
+        this.init(context);
     }
 
-    public RenderResourceCache(int capacity, int lowWater) {
+    public RenderResourceCache(Context context, int capacity, int lowWater) {
         super(capacity, lowWater);
-        this.init();
+        this.init(context);
     }
 
-    protected void init() {
+    protected void init(Context context) {
         this.handler = new Handler(this);
         this.evictionQueue = new ConcurrentLinkedQueue<>();
-        this.imageRetriever = new ImageRetriever(2);
-        this.urlImageRetriever = new ImageRetriever(8);
+        this.imageRetriever = new ImageRetriever(2, context);
+        this.urlImageRetriever = new ImageRetriever(8, context);
         this.imageRetrieverCache = new SynchronizedMemoryCache<>(this.getCapacity() / 8);
 
         Logger.log(Logger.INFO, String.format(Locale.US, "RenderResourceCache initialized  %,.0f KB  (%,.0f KB retrieval cache)",
@@ -67,15 +65,6 @@ public class RenderResourceCache extends LruMemoryCache<Object, RenderResource>
 
     public static int recommendedCapacity() {
         return (int) (Runtime.getRuntime().maxMemory() * 0.75); // Use maximum 75% of available application heap
-    }
-
-    public Resources getResources() {
-        return this.resources;
-    }
-
-    public void setResources(Resources res) {
-        this.resources = res;
-        ((ImageRetriever) this.imageRetriever).setResources(res);
     }
 
     public void clear() { // TODO rename as contextLost to clarify this method's purpose for RenderResourceCache

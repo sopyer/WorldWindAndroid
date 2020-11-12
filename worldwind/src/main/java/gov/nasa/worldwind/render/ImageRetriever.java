@@ -5,11 +5,13 @@
 
 package gov.nasa.worldwind.render;
 
-import android.content.res.Resources;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -22,18 +24,11 @@ import gov.nasa.worldwind.util.WWUtil;
 
 public class ImageRetriever extends Retriever<ImageSource, ImageOptions, Bitmap> {
 
-    protected Resources resources;
+    protected final Context context;
 
-    public ImageRetriever(int maxSimultaneousRetrievals) {
+    public ImageRetriever(int maxSimultaneousRetrievals, Context context) {
         super(maxSimultaneousRetrievals);
-    }
-
-    public Resources getResources() {
-        return resources;
-    }
-
-    public void setResources(Resources res) {
-        this.resources = res;
+        this.context = context;
     }
 
     @Override
@@ -80,7 +75,7 @@ public class ImageRetriever extends Retriever<ImageSource, ImageOptions, Bitmap>
 
     protected Bitmap decodeResource(int id, ImageOptions imageOptions) {
         BitmapFactory.Options factoryOptions = this.bitmapFactoryOptions(imageOptions);
-        return (this.resources != null) ? BitmapFactory.decodeResource(this.resources, id, factoryOptions) : null;
+        return BitmapFactory.decodeResource(this.context.getResources(), id, factoryOptions);
     }
 
     protected Bitmap decodeFilePath(String pathName, ImageOptions imageOptions) {
@@ -89,9 +84,14 @@ public class ImageRetriever extends Retriever<ImageSource, ImageOptions, Bitmap>
     }
 
     protected Bitmap decodeUrl(String urlString, ImageOptions imageOptions, ImageSource.Transformer transformer) throws IOException {
-        // TODO establish a file caching service for remote resources
         // TODO retry absent resources, they are currently handled but suppressed entirely after the first failure
         // TODO configurable connect and read timeouts
+
+        // Attempt to retrieve remote image from a file cache
+        Bitmap cached = retrieveFromCache(urlString, imageOptions);
+        if (cached != null) {
+            return cached;
+        }
 
         InputStream stream = null;
         try {
@@ -107,6 +107,11 @@ public class ImageRetriever extends Retriever<ImageSource, ImageOptions, Bitmap>
             // Apply bitmap transformation if required
             if (transformer != null && bitmap != null) {
                 bitmap = transformer.transform(bitmap);
+            }
+
+            // Store remote image in a file cache
+            if (bitmap != null) {
+                storeToCache(urlString, bitmap);
             }
 
             return bitmap;
@@ -136,5 +141,26 @@ public class ImageRetriever extends Retriever<ImageSource, ImageOptions, Bitmap>
         }
 
         return factoryOptions;
+    }
+
+    protected Bitmap retrieveFromCache(String urlString, ImageOptions imageOptions) {
+        File file = getCachedFile(urlString);
+        return file != null ? decodeFilePath(file.getAbsolutePath(), imageOptions) : null;
+    }
+
+    protected void storeToCache(String urlString, Bitmap bitmap) {
+        File file = getCachedFile(urlString);
+        if (file != null) {
+            try (FileOutputStream out = new FileOutputStream(file)) {
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            } catch (IOException e) {
+                Logger.logMessage(Logger.ERROR, "ImageRetriever", "storeToCache", "Cannot write bitmap to cache file");
+            }
+        }
+    }
+
+    private File getCachedFile(String urlString) {
+        byte[] hash = WWUtil.calculateHash(urlString.getBytes());
+        return new File(this.context.getCacheDir(), WWUtil.byteToHex(hash));
     }
 }

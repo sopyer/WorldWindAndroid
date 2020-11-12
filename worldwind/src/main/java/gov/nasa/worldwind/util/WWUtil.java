@@ -16,6 +16,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class WWUtil {
 
@@ -83,5 +85,24 @@ public class WWUtil {
         } finally {
             closeSilently(reader);
         }
+    }
+
+    public static byte[] calculateHash(byte[] bytes) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(bytes);
+            return md.digest();
+        } catch (NoSuchAlgorithmException e) {
+            Logger.logMessage(Logger.ERROR, "WWUtil", "calculateHash", "No MessageDigest instance available for \"SHA-256\"");
+            return null;
+        }
+    }
+
+    public static String byteToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString();
     }
 }
