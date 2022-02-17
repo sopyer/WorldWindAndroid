@@ -808,48 +808,42 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
         // offset is defined with its origin at the image's bottom-left corner and axes that extend up and to the right
         // from the origin point. When the placemark has no active texture the image scale defines the image size and no
         // other scaling is applied.
+        double w, h, s;
         if (this.activeTexture != null) {
-            int w = this.activeTexture.getWidth();
-            int h = this.activeTexture.getHeight();
-            double s = this.activeAttributes.imageScale * visibilityScale;
-            this.activeAttributes.imageOffset.offsetForSize(w, h, offset);
+            w = this.activeTexture.getWidth();
+            h = this.activeTexture.getHeight();
+            s = this.activeAttributes.imageScale * visibilityScale;
+        } else {
+            // This branch serves both non-textured attributes and also textures that haven't been loaded yet.
+            // We set the size for non-loaded textures to the typical size of a contemporary "small" icon (24px)
+            w = h = ( this.activeAttributes.imageSource != null ? 24 : this.activeAttributes.imageScale ) * visibilityScale;
+            s = 1.0;
+        }
 
-            unitSquareTransform.multiplyByTranslation(
+        this.activeAttributes.imageOffset.offsetForSize(w, h, offset);
+
+        unitSquareTransform.multiplyByTranslation(
                 screenPlacePoint.x - offset.x * s,
                 screenPlacePoint.y - offset.y * s,
                 screenPlacePoint.z);
 
-            unitSquareTransform.multiplyByScale(w * s, h * s, 1);
-        } else {
-            // This branch serves both non-textured attributes and also textures that haven't been loaded yet.
-            // We set the size for non-loaded textures to the typical size of a contemporary "small" icon (24px)
-            double size = this.activeAttributes.imageSource != null ? 24 : this.activeAttributes.imageScale;
-            size *= visibilityScale;
-            this.activeAttributes.imageOffset.offsetForSize(size, size, offset);
-
-            unitSquareTransform.multiplyByTranslation(
-                screenPlacePoint.x - offset.x,
-                screenPlacePoint.y - offset.y,
-                screenPlacePoint.z);
-
-            unitSquareTransform.multiplyByScale(size, size, 1);
-        }
-
         // ... perform image rotation
-        if (this.imageRotation != 0) {
-            double rotation = this.imageRotationReference == WorldWind.RELATIVE_TO_GLOBE ?
-                rc.camera.heading - this.imageRotation : -this.imageRotation;
-            unitSquareTransform.multiplyByTranslation(0.5, 0.5, 0);
-            unitSquareTransform.multiplyByRotation(0, 0, 1, rotation);
-            unitSquareTransform.multiplyByTranslation(-0.5, -0.5, 0);
+        if (this.imageRotation != 0 || this.imageTilt != 0) {
+            unitSquareTransform.multiplyByTranslation(w * s / 2, h * s / 2, 0);
+            if (this.imageTilt != 0) {
+                double tilt = this.imageTiltReference == WorldWind.RELATIVE_TO_GLOBE ?
+                        rc.camera.tilt + this.imageTilt : this.imageTilt;
+                unitSquareTransform.multiplyByRotation(-1, 0, 0, tilt);
+            }
+            if (this.imageRotation != 0) {
+                double rotation = this.imageRotationReference == WorldWind.RELATIVE_TO_GLOBE ?
+                        rc.camera.heading - this.imageRotation : -this.imageRotation;
+                unitSquareTransform.multiplyByRotation(0, 0, 1, rotation);
+            }
+            unitSquareTransform.multiplyByTranslation(- w * s / 2, - h * s / 2, 0);
         }
 
-        // ... and perform the tilt so that the image tilts back from its base into the view volume.
-        if (this.imageTilt != 0) {
-            double tilt = this.imageTiltReference == WorldWind.RELATIVE_TO_GLOBE ?
-                rc.camera.tilt + this.imageTilt : this.imageTilt;
-            unitSquareTransform.multiplyByRotation(-1, 0, 0, tilt);
-        }
+        unitSquareTransform.multiplyByScale(w * s, h * s, 1);
     }
 
     /**
