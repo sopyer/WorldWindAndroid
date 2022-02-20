@@ -835,7 +835,8 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
 
         // NOTE: transform order is important!!!
 
-        // Ensure all z values in [-1..1] range, we are mapping [-maxScale..maxScale]->[-1..1]
+        // Ensure all z values in [-1..1] range after projection matrix multiplication
+        // We are mapping [-maxScale..maxScale]->[0..1], as ortho matrix maps [0..1]->[-1..1]
         unitSquareTransform.multiplyByTranslation(
                 screenPlacePoint.x,
                 screenPlacePoint.y,
