@@ -809,11 +809,6 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
         // from the origin point. When the placemark has no active texture the image scale defines the image size and no
         // other scaling is applied.
 
-        unitSquareTransform.multiplyByTranslation(
-            screenPlacePoint.x,
-            screenPlacePoint.y,
-            screenPlacePoint.z);
-
         double scaleX, scaleY;
         double offsetX, offsetY;
         if (this.activeTexture != null) {
@@ -839,6 +834,15 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
         }
 
         // NOTE: transform order is important!!!
+
+        // Ensure all z values in [-1..1] range, we are mapping [-maxScale..maxScale]->[-1..1]
+        unitSquareTransform.multiplyByTranslation(
+                screenPlacePoint.x,
+                screenPlacePoint.y,
+                0.5);
+
+        double maxScale = scaleX > scaleY ? scaleX : scaleY;
+        unitSquareTransform.multiplyByScale(1, 1, 0.5 / maxScale);
 
         // ... perform the tilt so that the image tilts back from its base into the view volume.
         if (this.imageTilt != 0) {
