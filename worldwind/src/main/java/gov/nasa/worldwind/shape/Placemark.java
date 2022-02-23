@@ -819,8 +819,8 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
             scaleY = h * s;
 
             this.activeAttributes.imageOffset.offsetForSize(w, h, offset);
-            offsetX = -offset.x * s;
-            offsetY = -offset.y * s;
+            offsetX = offset.x * s;
+            offsetY = offset.y * s;
         } else {
             // This branch serves both non-textured attributes and also textures that haven't been loaded yet.
             // We set the size for non-loaded textures to the typical size of a contemporary "small" icon (24px)
@@ -829,45 +829,37 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
             scaleX = scaleY = size;
 
             this.activeAttributes.imageOffset.offsetForSize(size, size, offset);
-            offsetX = -offset.x;
-            offsetY = -offset.y;
+            offsetX = offset.x;
+            offsetY = offset.y;
         }
 
         // NOTE: transform order is important!!!
 
-        // Ensure all z values in [-1..1] range after projection matrix multiplication
-        // We are mapping [-maxScale..maxScale]->[0..1], as ortho matrix maps [0..1]->[-1..1]
         unitSquareTransform.multiplyByTranslation(
                 screenPlacePoint.x,
                 screenPlacePoint.y,
-                0.5);
+                screenPlacePoint.z);
 
-        double maxScale = scaleX > scaleY ? scaleX : scaleY;
-        unitSquareTransform.multiplyByScale(1, 1, 0.5 / maxScale);
+        unitSquareTransform.multiplyByScale(1, 1, 1.0/16777216.0);
 
-        // ... perform the tilt so that the image tilts back from its base into the view volume.
+        // Perform the tilt so that the image tilts back from its base into the view volume
         if (this.imageTilt != 0) {
             double tilt = this.imageTiltReference == WorldWind.RELATIVE_TO_GLOBE ?
-                    rc.camera.tilt + this.imageTilt : this.imageTilt;
+                rc.camera.tilt + this.imageTilt : this.imageTilt;
             unitSquareTransform.multiplyByRotation(-1, 0, 0, tilt);
         }
 
-        // ... perform image rotation
+        // Perform image rotation
         if (this.imageRotation != 0) {
             double rotation = this.imageRotationReference == WorldWind.RELATIVE_TO_GLOBE ?
                 rc.camera.heading - this.imageRotation : -this.imageRotation;
-            unitSquareTransform.multiplyByTranslation(0.5, 0.5, 0);
             unitSquareTransform.multiplyByRotation(0, 0, 1, rotation);
-            unitSquareTransform.multiplyByTranslation(-0.5, -0.5, 0);
         }
 
-        // ... apply pivot translation
-        unitSquareTransform.multiplyByTranslation(
-                offsetX,
-                offsetY,
-                screenPlacePoint.z);
+        // Apply pivot translation
+        unitSquareTransform.multiplyByTranslation(-offsetX, -offsetY, 0);
 
-        // ... apply scale
+        // Apply scale
         unitSquareTransform.multiplyByScale(scaleX, scaleY, 1);
     }
 
