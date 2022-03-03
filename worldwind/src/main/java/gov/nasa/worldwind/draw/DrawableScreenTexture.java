@@ -25,6 +25,8 @@ public class DrawableScreenTexture implements Drawable {
 
     public boolean enableDepthTest = true;
 
+    public boolean useScreenProjection = true;
+
     private Pool<DrawableScreenTexture> pool;
 
     private final Matrix4 mvpMatrix = new Matrix4();
@@ -106,17 +108,18 @@ public class DrawableScreenTexture implements Drawable {
         }
 
         // Use a modelview-projection matrix that transforms the unit square to screen coordinates.
-        drawable.mvpMatrix.setToMultiply(dc.screenProjection, drawable.unitSquareTransform);
+        drawable.mvpMatrix.setToMultiply(useScreenProjection ? dc.screenProjection : dc.projection, drawable.unitSquareTransform);
         drawable.program.loadModelviewProjection(drawable.mvpMatrix);
 
         // Disable depth testing if requested.
         if (!drawable.enableDepthTest) {
             GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         }
-
+        GLES20.glDisable(GLES20.GL_CULL_FACE);
         // Draw the unit square as triangles.
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
+        GLES20.glEnable(GLES20.GL_CULL_FACE);
         // Restore the default WorldWind OpenGL state.
         if (!drawable.enableDepthTest) {
             GLES20.glEnable(GLES20.GL_DEPTH_TEST);

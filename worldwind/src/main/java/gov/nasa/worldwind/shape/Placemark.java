@@ -720,7 +720,7 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
                 groundPoint);
 
             // If the leader is visible, enqueue a drawable leader for processing on the OpenGL thread.
-            if (rc.frustum.intersectsSegment(groundPoint, placePoint)) {
+            /*if (rc.frustum.intersectsSegment(groundPoint, placePoint))*/ {
                 Pool<DrawableLines> pool = rc.getDrawablePool(DrawableLines.class);
                 DrawableLines drawable = DrawableLines.obtain(pool);
                 this.prepareDrawableLeader(rc, drawable);
@@ -750,7 +750,7 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
 
         // If the placemark's icon is visible, enqueue a drawable icon for processing on the OpenGL thread.
         WWMath.boundingRectForUnitSquare(unitSquareTransform, screenBounds);
-        if (rc.frustum.intersectsViewport(screenBounds)) {
+        /*if (rc.frustum.intersectsViewport(screenBounds))*/ {
             Pool<DrawableScreenTexture> pool = rc.getDrawablePool(DrawableScreenTexture.class);
             DrawableScreenTexture drawable = DrawableScreenTexture.obtain(pool);
             this.prepareDrawableIcon(rc, drawable);
@@ -835,12 +835,19 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
 
         // NOTE: transform order is important!!!
 
-        unitSquareTransform.multiplyByTranslation(
-                screenPlacePoint.x,
-                screenPlacePoint.y,
-                screenPlacePoint.z);
+        double mx = placePoint.x;
+        double my = placePoint.y;
+        double mz = placePoint.z;
+        double[] m = rc.modelview.m;
+        double ex = m[0] * mx + m[1] * my + m[2] * mz + m[3];
+        double ey = m[4] * mx + m[5] * my + m[6] * mz + m[7];
+        double ez = m[8] * mx + m[9] * my + m[10] * mz + m[11];
+        double ew = m[12] * mx + m[13] * my + m[14] * mz + m[15];
 
-        unitSquareTransform.multiplyByScale(1, 1, 1.0/16777216.0);
+        unitSquareTransform.multiplyByTranslation(
+                ex,
+                ey,
+                (1+DEFAULT_DEPTH_OFFSET/*bias*/) * ez);
 
         // Perform the tilt so that the image tilts back from its base into the view volume
         if (this.imageTilt != 0) {
@@ -857,10 +864,11 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
         }
 
         // Apply pivot translation
-        unitSquareTransform.multiplyByTranslation(-offsetX, -offsetY, 0);
-
+        //unitSquareTransform.multiplyByTranslation(-offsetX, -offsetY, 0);
+        scaleX = scaleY = 1;
         // Apply scale
-        unitSquareTransform.multiplyByScale(scaleX, scaleY, 1);
+        unitSquareTransform.multiplyByScale(0.05*ez, -0.05*ez, ez);
+        unitSquareTransform.multiplyByTranslation(-0.5, -0.5, 0);
     }
 
     /**
@@ -878,6 +886,7 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
         }
 
         // Use the plaemark's unit square transform matrix.
+        drawable.useScreenProjection = false;
         drawable.unitSquareTransform.set(unitSquareTransform);
 
         // Configure the drawable according to the placemark's active attributes. Use a color appropriate for the pick

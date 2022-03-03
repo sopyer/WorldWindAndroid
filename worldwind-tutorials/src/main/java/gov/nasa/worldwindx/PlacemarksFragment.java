@@ -48,6 +48,10 @@ public class PlacemarksFragment extends BasicGlobeFragment {
             Position.fromDegrees(34.260, -119.2, 5000),
             PlacemarkAttributes.createWithImageAndLeader(ImageSource.fromResource(R.drawable.aircraft_fixwing)).setImageScale(1.5));
 
+        Placemark airplaneTest = new Placemark(
+                Position.fromDegrees(34.260, -119.1, 5000),
+                PlacemarkAttributes.createWithImageAndLeader(ImageSource.fromResource(R.drawable.aircraft_fixwing)).setImageScale(1.5));
+        airplaneTest.setImageRotation(60.0).setImageTilt(60.0);
         // Create an image-based placemark with a label at Oxnard Airport, CA. This placemark demonstrates creation
         // with a constructor and a convenient PlacemarkAttributes factory method. The image is scaled to 2x
         // its original size, with the bottom center of the image anchored at the geographic position.
@@ -64,6 +68,7 @@ public class PlacemarksFragment extends BasicGlobeFragment {
         Placemark wildfire = new Placemark(
             Position.fromDegrees(34.300, -119.25, 0),
             PlacemarkAttributes.createWithImage(ImageSource.fromBitmap(bitmap)).setImageOffset(Offset.bottomCenter()));
+        wildfire.setImageRotation(60.0).setImageTilt(60.0);
 
         /////////////////////////////////////////////////////
         // Third, add the placemarks to the renderable layer
@@ -72,6 +77,7 @@ public class PlacemarksFragment extends BasicGlobeFragment {
         placemarksLayer.addRenderable(ventura);
         placemarksLayer.addRenderable(airport);
         placemarksLayer.addRenderable(airplane);
+        placemarksLayer.addRenderable(airplaneTest);
         placemarksLayer.addRenderable(wildfire);
 
 
