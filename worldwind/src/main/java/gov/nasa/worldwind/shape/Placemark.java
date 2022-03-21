@@ -5,6 +5,8 @@
 
 package gov.nasa.worldwind.shape;
 
+import java.util.Locale;
+
 import gov.nasa.worldwind.PickedObject;
 import gov.nasa.worldwind.WorldWind;
 import gov.nasa.worldwind.draw.DrawableLines;
@@ -814,7 +816,7 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
         if (this.activeTexture != null) {
             int w = this.activeTexture.getWidth();
             int h = this.activeTexture.getHeight();
-            double s = this.activeAttributes.imageScale * visibilityScale;
+            double s = 1;//this.activeAttributes.imageScale * visibilityScale;
             scaleX = w * s;
             scaleY = h * s;
 
@@ -825,7 +827,7 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
             // This branch serves both non-textured attributes and also textures that haven't been loaded yet.
             // We set the size for non-loaded textures to the typical size of a contemporary "small" icon (24px)
             double size = this.activeAttributes.imageSource != null ? 24 : this.activeAttributes.imageScale;
-            size *= visibilityScale;
+            //size *= visibilityScale;
             scaleX = scaleY = size;
 
             this.activeAttributes.imageOffset.offsetForSize(size, size, offset);
@@ -865,9 +867,8 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
 
         // Apply pivot translation
         //unitSquareTransform.multiplyByTranslation(-offsetX, -offsetY, 0);
-        scaleX = scaleY = 1;
         // Apply scale
-        unitSquareTransform.multiplyByScale(0.05*ez, -0.05*ez, ez);
+        unitSquareTransform.multiplyByScale(-2.0 * scaleX * ez / (rc.viewport.width * rc.projection.m[0]), -2.0 * scaleY * ez / (rc.viewport.height * rc.projection.m[5]), ez);
         unitSquareTransform.multiplyByTranslation(-0.5, -0.5, 0);
     }
 
