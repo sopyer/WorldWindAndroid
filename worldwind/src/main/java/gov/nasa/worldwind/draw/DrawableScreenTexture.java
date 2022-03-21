@@ -114,9 +114,12 @@ public class DrawableScreenTexture implements Drawable {
             GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         }
 
+        float z = (float)(drawable.mvpMatrix.m[11]/drawable.mvpMatrix.m[15]);
+        GLES20.glDepthRangef(z, z);
         // Draw the unit square as triangles.
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
+        GLES20.glDepthRangef(0.0f, 1.0f);
         // Restore the default WorldWind OpenGL state.
         if (!drawable.enableDepthTest) {
             GLES20.glEnable(GLES20.GL_DEPTH_TEST);
