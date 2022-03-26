@@ -60,8 +60,6 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
      */
     protected static final double DEFAULT_EYE_DISTANCE_SCALING_THRESHOLD = 1e6;
 
-    protected static final double DEFAULT_DEPTH_OFFSET = -0.1;
-
     private static final Vec3 placePoint = new Vec3();
 
     private static final Vec3 screenPlacePoint = new Vec3();
@@ -104,6 +102,11 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
      * The texture associated with the active attributes, or null if the attributes specify no image.
      */
     protected Texture activeTexture;
+
+    /**
+     * Depth offset to apply to placemark
+     */
+    protected double depthOffset = 0.0;
 
     /**
      * The picked object ID associated with the placemark during the current render pass.
@@ -309,6 +312,21 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
      */
     public Placemark setAltitudeMode(@WorldWind.AltitudeMode int altitudeMode) {
         this.altitudeMode = altitudeMode;
+        return this;
+    }
+
+    /**
+     * Returns the placemark's depth offset.
+     */
+    public double getDepthOffset() {
+        return depthOffset;
+    }
+
+    /**
+     * Sets the placemark's depth offset.
+     */
+    public Placemark setDepthOffset(double depthOffset) {
+        this.depthOffset = depthOffset;
         return this;
     }
 
@@ -685,7 +703,7 @@ public class Placemark extends AbstractRenderable implements Highlightable, Mova
         // Compute a screen depth offset appropriate for the current viewing parameters.
         double depthOffset = 0;
         if (this.cameraDistance < rc.horizonDistance) {
-            depthOffset = DEFAULT_DEPTH_OFFSET;
+            depthOffset = this.depthOffset;
         }
 
         // Project the placemark's model point to screen coordinates, using the screen depth offset to push the screen
