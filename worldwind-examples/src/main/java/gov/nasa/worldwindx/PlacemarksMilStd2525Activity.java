@@ -86,7 +86,7 @@ public class PlacemarksMilStd2525Activity extends GeneralGlobeActivity {
             Placemark drone = new Placemark(
                 Position.fromDegrees(32.4520, 63.44553, 3000),
                 MilStd2525.getPlacemarkAttributes("SFAPMFQM--GIUSA", modifiers, null));
-
+            drone.getAttributes().setDepthTest(true);
             symbolLayer.addRenderable(drone);
 
             // Add a "MIL-STD-2525 Hostile Self-Propelled Rocket Launchers"
@@ -96,8 +96,8 @@ public class PlacemarksMilStd2525Activity extends GeneralGlobeActivity {
             Placemark launcher = new Placemark(
                 Position.fromDegrees(32.4014, 63.3894, 0),
                 MilStd2525.getPlacemarkAttributes("SHGXUCFRMS----G", modifiers, null));
-
-            symbolLayer.addRenderable(launcher);
+            launcher.getAttributes().setDepthTest(true);
+            symbolLayer.addRenderable(launcher.setAltitudeMode(WorldWind.RELATIVE_TO_GROUND));
 
             // Add a "MIL-STD-2525 Friendly Heavy Machine Gun"
             modifiers.clear();
@@ -109,8 +109,8 @@ public class PlacemarksMilStd2525Activity extends GeneralGlobeActivity {
             Placemark machineGun = new Placemark(
                 Position.fromDegrees(32.3902, 63.4161, 0),
                 MilStd2525.getPlacemarkAttributes("SFGPEWRH--MTUSG", modifiers, null));
-
-            symbolLayer.addRenderable(machineGun);
+            machineGun.getAttributes().setDepthTest(true);
+            symbolLayer.addRenderable(machineGun.setAltitudeMode(WorldWind.RELATIVE_TO_GROUND));
 
             // Signal a change in the WorldWind scene; requestRedraw() is callable from any thread.
             //noinspection ResourceType
