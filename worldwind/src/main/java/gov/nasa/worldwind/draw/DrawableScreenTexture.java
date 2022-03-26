@@ -114,7 +114,7 @@ public class DrawableScreenTexture implements Drawable {
             GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         }
 
-        float z = (float)(drawable.mvpMatrix.m[11]/drawable.mvpMatrix.m[15]);
+        float z = (float)(drawable.mvpMatrix.m[11]/drawable.mvpMatrix.m[15]) * 0.5f + 0.5f;
         GLES20.glDepthRangef(z, z);
         // Draw the unit square as triangles.
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
